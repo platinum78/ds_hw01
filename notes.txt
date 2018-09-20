@@ -1,0 +1,1 @@
+* ftell(): tells the current location of file pointer
