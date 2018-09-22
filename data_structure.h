@@ -224,6 +224,32 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
     // MatAdd should be responsible for all four cases: S+S, S+D, D+S, D+D
     int idx = 0;
     int nBuf;  // Integer buffer for general purpose
+    if ((matResult->dMatrix) == NULL && (matResult->sMatrix) == NULL)
+    {
+        // Case when matResult is a zero matrix. Copy all values to matResult
+        if ((matNext->sMatrix) != NULL)
+        {
+            nBuf = (matNext->nonzero_cnt);
+            SparseMatElem* pMatrix = (SparseMatElem*)malloc(sizeof(SparseMatElem) * nBuf);
+            for (idx = 0; idx < nBuf; idx++)
+                pMatrix[idx] = (SparseMatElem){ .row = (matNext->sMatrix)[idx].row,
+                                                .col = (matNext->sMatrix)[idx].col,
+                                                .val = (matNext->sMatrix)[idx].val };
+            (matResult->sMatrix) = pMatrix;
+            pMatrix = NULL;
+        }
+        else if ((matNext->dMatrix) != NULL)
+        {
+            nBuf = (matNext->size);
+            int* pMatrix = (int*)malloc(sizeof(int) * nBuf * nBuf);
+            nBuf *= nBuf;
+            for (idx = 0; idx < nBuf; idx++)
+                pMatrix[idx] = (matNext->dMatrix)[idx];
+            (matResult->dMatrix) = pMatrix;
+            pMatrix = NULL;
+        }
+    }
+
     if ((matResult->sMatrix) != NULL && (matNext->sMatrix) != NULL)
     {
         int nIdxCmp = 0, idxResult = 0, idxNext = 0;  // *CR: column+row / idx*: index buffer
@@ -346,7 +372,7 @@ int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
 {
     if ((matResult->sMatrix) != NULL && (matNext->sMatrix) != NULL)
     {
-
+        
     }
     else if ((matResult->sMatrix) != NULL && (matNext->sMatrix) == NULL)
     {

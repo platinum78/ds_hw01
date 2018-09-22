@@ -29,6 +29,7 @@ int main(void)
     // Read the dimension of matrix
     fscanf(input, "%s", cStrBuf);
     nDim = (int)atoi(cStrBuf);
+    (matResult->size) = nDim;
 
     // Read while met first $
     nDollarPos[0] = FindDollar(input);
@@ -59,7 +60,6 @@ int main(void)
 
     // Read the formula and do whatever operation needed
     // 001 for add, 010 for mul, 100 for transpose
-    char bOperationType = 0b000;
     SquareMatrix* pNextOperand = NULL;      // Next operand
     char cNextOperator = '\0';              // Next operator
     nBuf = 0;               // nBuf will be used for operation triggering here.
