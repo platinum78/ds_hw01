@@ -21,10 +21,10 @@ typedef struct SparseMatElem
 // struct for square matrices
 typedef struct SquareMatrix
 {
-    int size;
+    int size;  // Size of axis1
     int nonzero_cnt;
-    int* dMatrix;
-    SparseMatElem* sMatrix;
+    int* dMatrix;  // Pointer to dense matrix; NULL if matrix is sparse
+    SparseMatElem* sMatrix;  // Pointer to sparse matrix; NULL if matrix is dense
 } SquareMatrix;
 
 
