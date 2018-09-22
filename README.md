@@ -4,7 +4,7 @@ Data Structure SWE2015-41, School of Software, SKKU <br>
 Susung Park (2014311254), School of Mechanical Engineering, SKKU
 
 
-## Objectives and Considerations
+## I. Objectives and Considerations
 
 In this assignment, basic arithmetic and transposition operations of matrices are evaluated.
 While writing the codes, the followings are considered, with the priority follwing the numbers.
@@ -32,8 +32,9 @@ This way, both sparse matrix and dense matrix can be capsulized as `SquareMatrix
 
 Now, we consider about the operations between matrices.
 
+<br>
 
-## Operations
+## II. Operations
 
 Operations are given in a string form. Therefore, this formula should be parsed into set of operations.
 Fortunately, there is no condition to follow the priority rules, so serial reading is enough.
@@ -57,4 +58,29 @@ Else if `matResult` is sparse and `matNext` is dense, we can convert `matResult`
 
 Dealing with addition between two sparse matrices is a real problem. It is somewhat similar to a *union* in set theories.
 We should merge two matrices, while finding and adding elements that have identical indices.
-Fortunately, thanks to the nature of the process creating sparce matrices, ***both matrices are already sorted in column-major order***.
+Fortunately, thanks to the nature of the process creating sparce matrices, ***both matrices are already sorted in column-major order***. We can simply consider this problem as merging two dictionaries.
+
+When we try to merge two dictionaries into one in lexiographical order (which actually seems quite silly), we might open the first page of both dictionaries and start comparing which word will come prior. In the exactly same method, we can merge two sparse matrices.
+
+
+### 2. Multiplication
+
+Multiplication was either a hard job to create. (TBD)
+
+
+### 3. Transposition
+
+Transposition was realized exactly the same way discussed in class.
+
+<br>
+
+## III. Time & Space Compexity
+
+(TBD)
+
+<br>
+
+## IV. How to Use
+
+Usage of this program is exactly same with the requirements in the PDF file, which was preliminarily provided. <br>
+**ONE THING TO BE CAUTIOUS: USE \` FOR TRANSPOSITION SYMBOL. OTHERWISE THE PROGRAM WON'T ** 

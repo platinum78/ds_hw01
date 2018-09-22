@@ -9,6 +9,16 @@
 #define FROM_ARRAY 2
 
 
+// Struct that describes the file
+typedef struct FILE_INFO
+{
+    int dollar_pos[3];
+    int dimension;
+    int matA_nonzeros;
+    int matB_nonzeros;
+} FILE_INFO;
+
+
 // struct for sparse matrix elements
 typedef struct SparseMatElem
 {
@@ -28,19 +38,7 @@ typedef struct SquareMatrix
 } SquareMatrix;
 
 
-// Initializes SquareMatrix instance.
-// All SquareMatrix instances should be declared this way.
-SquareMatrix* SquareMatrixInit(void)
-{
-    SquareMatrix* matrix = (SquareMatrix*)malloc(sizeof(SquareMatrix));
-    matrix->dMatrix = NULL;
-    matrix->sMatrix = NULL;
-    matrix->size = 0;
-    matrix->nonzero_cnt = 0;
-    return matrix;
-}
-
-
+SquareMatrix* SquareMatrixInit(void);
 int ReadMatrix(FILE* input, int dim);
 int CreateDenseMatix(FILE* input, SquareMatrix* mat);
 int CreateSparseMatrix(FILE* input, SquareMatrix* mat);
@@ -51,17 +49,32 @@ int MatTranspose(SquareMatrix* mat);
 int IdxCmp(SparseMatElem* elem1, SparseMatElem* elem2);
 
 
+// Initializes SquareMatrix instance.
+// All SquareMatrix instances should be declared this way.
+SquareMatrix* SquareMatrixInit(void)
+{
+    SquareMatrix* matrix = (SquareMatrix*)malloc(sizeof(SquareMatrix));
+    matrix->dMatrix = NULL;
+    matrix->sMatrix = NULL;
+    matrix->size = 0;
+    matrix->nonzero_cnt = 0;
+
+    // printf("Initialized SquareMatrix object at 0x%p \n", (void*)matrix);
+    return matrix;
+}
+
 
 // Read the matrix and return the number of nonzero elements.
 // Return -1 if read operation was not successful.
-int ReadMatrix(FILE* input, int dim)
+int AnalyzeMatrix(FILE* input, int dim, int offset)
 {
     int nZeroCnt = 0;
     int nNonZeroCnt = 0;
     int idx = 0;
     char cStrBuf[11];
     int nBuf;
-
+    fseek(input, offset, SEEK_SET);
+    
     // Count the number of zero and nonzero elements
     for (idx = 0; idx < dim*dim; idx++)
     {
@@ -78,11 +91,12 @@ int ReadMatrix(FILE* input, int dim)
     if (nNonZeroCnt + nZeroCnt != dim * dim)
         return -1;
     
+    // printf("Matrix read operation finished. \n");
     return nNonZeroCnt;
 }
 
 
-int CreateDenseMatix(FILE* input, SquareMatrix* mat)
+int CreateDenseMatrix(FILE* input, SquareMatrix* mat)
 {
     // Setup buffers for function operation
     int idx = 0;
@@ -106,6 +120,7 @@ int CreateDenseMatix(FILE* input, SquareMatrix* mat)
     // Set the matrix pointer of SquareMatrix instance
     mat->dMatrix = npMatrix;
 
+    // printf("Dense matrix created at %p \n", (void*)mat);
     return 0;
 }
 
@@ -147,13 +162,13 @@ int CreateSparseMatrix(FILE* input, SquareMatrix* mat)
     int* npOffsets = (int*)malloc(sizeof(int) * nDim);
 
     // Initialize two arrays to all 0.
-    for (idx = 0; idx < nDim * nDim; idx++)
+    for (idx = 0; idx < nDim; idx++)
         npCntByCol[idx] = 0;
-    for (idx = 0; idx < nDim * nDim; idx++)
+    for (idx = 0; idx < nDim; idx++)
         npOffsets[idx] = 0;
 
     // Sweep the matrix and count
-    for (idx = 0; idx < nDim * nDim; idx++)
+    for (idx = 0; idx < (mat->nonzero_cnt); idx++)
         npCntByCol[pMatrix[idx].col]++;
     
     // Calculate offsets
@@ -181,6 +196,8 @@ int CreateSparseMatrix(FILE* input, SquareMatrix* mat)
 
     // Parse the pointer to tansposed matrix
     mat->sMatrix = pMatrix_T;
+    // printf("Sparse matrix created at %p \n", (void*)mat);
+    return 0;
 }
 
 
@@ -188,7 +205,7 @@ void Sparse2Dense(SquareMatrix* mat)
 {
     // Verify if square matrix is sparse
     if (mat->sMatrix == NULL)
-        return -1;
+        return;
 
     // Set buffers for function operation
     int idx, nDim, nBuf;
@@ -222,10 +239,12 @@ void Sparse2Dense(SquareMatrix* mat)
 int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
 {
     // MatAdd should be responsible for all four cases: S+S, S+D, D+S, D+D
+    // printf("MatAdd called! \n");
     int idx = 0;
     int nBuf;  // Integer buffer for general purpose
     if ((matResult->dMatrix) == NULL && (matResult->sMatrix) == NULL)
     {
+        printf("matResult is empty! \n");
         // Case when matResult is a zero matrix. Copy all values to matResult
         if ((matNext->sMatrix) != NULL)
         {
@@ -241,90 +260,126 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
         else if ((matNext->dMatrix) != NULL)
         {
             nBuf = (matNext->size);
-            int* pMatrix = (int*)malloc(sizeof(int) * nBuf * nBuf);
             nBuf *= nBuf;
+            int* pMatrix = (int*)malloc(sizeof(int) * nBuf);
             for (idx = 0; idx < nBuf; idx++)
                 pMatrix[idx] = (matNext->dMatrix)[idx];
             (matResult->dMatrix) = pMatrix;
             pMatrix = NULL;
         }
+        (matResult->nonzero_cnt) += (matNext->nonzero_cnt);
+        return 0;
     }
-
+    printf("matResult not empty! \n");
     if ((matResult->sMatrix) != NULL && (matNext->sMatrix) != NULL)
     {
         int nIdxCmp = 0, idxResult = 0, idxNext = 0;  // *CR: column+row / idx*: index buffer
         int nTotalElemCnt = (matResult->nonzero_cnt) + (matNext->nonzero_cnt);
+        
+        printf("Total elements before repetition elimination: %d \n", nTotalElemCnt);
         int nRepElemCnt = 0;  // Variable to count the number of repeated elements
 
         // First loop iteration: count the overall elements considering repetition
-        while (idxResult + idxNext == nTotalElemCnt)
+        while (idxResult + idxNext != nTotalElemCnt)
         {
-            // Compare two indices
-            nIdxCmp = IdxCmp((matResult->sMatrix) + idxResult, (matNext->sMatrix) + idxNext);
+            if (idxResult == (matResult->nonzero_cnt) && idxNext != (matNext->nonzero_cnt))
+            {
+                // Index of matResult reached the top
+                idxNext++;
+            }
+            else if (idxResult != (matResult->nonzero_cnt) && idxNext == (matNext->nonzero_cnt))
+            {
+                // Index of matNext reached the top
+                idxResult++;
+            }
+            else
+            {
+                // Compare two indices
+                nIdxCmp = IdxCmp((matResult->sMatrix) + idxResult, (matNext->sMatrix) + idxNext);
 
-            // Start Comparing
-            if (nIdxCmp == 1)
-            {
-                // matResult precedes matNext
-                idxResult++;
-            }
-            else if (nIdxCmp == -1)
-            {
-                // matNext precedes matResult
-                idxNext++;
-            }
-            else if (nIdxCmp == 0)
-            {
-                // Found identical index. Add 1 to nRepElemCnt
-                nRepElemCnt++;
-                idxResult++;
-                idxNext++;
+                // Start Comparing
+                if (nIdxCmp == 1)
+                {
+                    // matResult precedes matNext
+                    printf("matResult precedes \n");
+                    idxResult++;
+                }
+                else if (nIdxCmp == -1)
+                {
+                    // matNext precedes matResult
+                    printf("matNext precedes \n");
+                    idxNext++;
+                }
+                else if (nIdxCmp == 0)
+                {
+                    // Found identical index. Add 1 to nRepElemCnt
+                    nRepElemCnt++;
+                    idxResult++;
+                    idxNext++;
+                    printf("nRepElemCnt: %d \n", nRepElemCnt);
+                }
             }
         }
         idxResult = idxNext = 0;
         // Calculate total element count removing repetitions,
         // and allocate memory for the new sparse matrix pMatrix
-        nTotalElemCnt =- nRepElemCnt;
-        SparseMatElem* pMatrix = (SparseMatElem*)malloc(sizeof(SparseMatElem) * (nTotalElemCnt));
+        printf("Total elements after repetition elimination: %d \n", nTotalElemCnt - nRepElemCnt);
+        SparseMatElem* pMatrix = (SparseMatElem*)malloc(sizeof(SparseMatElem) * (nTotalElemCnt - nRepElemCnt));
+        (matResult->nonzero_cnt) = nTotalElemCnt - nRepElemCnt;
 
         // Second loop iteration: actually copy values to pMatrix
         int idxNew = 0;
-        while (idxResult + idxNext == nTotalElemCnt)
+        while (idxResult + idxNext != nTotalElemCnt)
         {
-            // Compare two indices
-            nIdxCmp = IdxCmp((matResult->sMatrix) + idxResult, (matNext->sMatrix) + idxNext);
-
-            // Start Comparing
-            if (nIdxCmp == 1)
+            printf("nexIndex: %d \n", idxNew);
+            if (idxResult == (matResult->nonzero_cnt) && idxNext != (matNext->nonzero_cnt))
             {
-                // matResult precedes matNext
-                // Copy contents from matResult to pMatrix
-                pMatrix[idxNew] = (SparseMatElem){ .col = (matResult->sMatrix)[idxResult].col, 
-                                                   .row = (matResult->sMatrix)[idxResult].row, 
-                                                   .val = (matResult->sMatrix)[idxResult].val };
-                idxResult++;
-            }
-            else if (nIdxCmp == -1)
-            {
-                // matNext precedes matResult
-                // Copy contents from matNext to pMatrix
-                pMatrix[idxNew] = (SparseMatElem){ .col = (matNext->sMatrix)[idxNext].col, 
+                // Index of matResult reached the top
+                pMatrix[idxNew++] = (SparseMatElem){ .col = (matNext->sMatrix)[idxNext].col, 
                                                    .row = (matNext->sMatrix)[idxNext].row, 
                                                    .val = (matNext->sMatrix)[idxNext].val };
                 idxNext++;
             }
-            else if (nIdxCmp == 0)
+            else if (idxResult != (matResult->nonzero_cnt) && idxNext == (matNext->nonzero_cnt))
             {
-                // Found identical index. Add 1 to nRepElemCnt
-                // Copy added value of matResult and matNext to pMatrix
-                pMatrix[idxNew] = (SparseMatElem){ .col = (matResult->sMatrix)[idxResult].col
-                                                            + (matNext->sMatrix)[idxNext].col, 
-                                                   .row = (matResult->sMatrix)[idxResult].row
-                                                            + (matNext->sMatrix)[idxNext].row, 
-                                                   .val = (matResult->sMatrix)[idxResult].val
-                                                            + (matNext->sMatrix)[idxNext].val };
+                // Index of matNext reached the top
+                pMatrix[idxNew++] = (SparseMatElem){ .col = (matResult->sMatrix)[idxResult].col, 
+                                                   .row = (matResult->sMatrix)[idxResult].row, 
+                                                   .val = (matResult->sMatrix)[idxResult].val };
                 idxResult++;
-                idxNext++;
+            }
+            else
+            {
+                // Compare two indices
+                nIdxCmp = IdxCmp((matResult->sMatrix) + idxResult, (matNext->sMatrix) + idxNext);
+
+                // Start Comparing
+                if (nIdxCmp == 1)
+                {
+                    // matResult precedes matNext
+                    pMatrix[idxNew++] = (SparseMatElem){ .col = (matResult->sMatrix)[idxResult].col, 
+                                                        .row = (matResult->sMatrix)[idxResult].row, 
+                                                        .val = (matResult->sMatrix)[idxResult].val };
+                    idxResult++;
+                }
+                else if (nIdxCmp == -1)
+                {
+                    // matNext precedes matResult
+                    pMatrix[idxNew++] = (SparseMatElem){ .col = (matNext->sMatrix)[idxNext].col, 
+                                                        .row = (matNext->sMatrix)[idxNext].row, 
+                                                        .val = (matNext->sMatrix)[idxNext].val };
+                    idxNext++;
+                }
+                else if (nIdxCmp == 0)
+                {
+                    // Found identical index. Add 1 to nRepElemCnt
+                    pMatrix[idxNew++] = (SparseMatElem){ .col = (matResult->sMatrix)[idxResult].col,
+                                                        .row = (matResult->sMatrix)[idxResult].row,
+                                                        .val = (matResult->sMatrix)[idxResult].val
+                                                                    + (matNext->sMatrix)[idxNext].val };
+                    idxResult++;
+                    idxNext++;
+                }
             }
         }
 
@@ -363,6 +418,8 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
             (matResult->dMatrix)[idx] += (matNext->dMatrix)[idx];
     }
     
+    if ((matResult->nonzero_cnt) > (matResult->size) * (matResult->size) / 3)
+        Sparse2Dense(matResult);
     return 0;
 }
 
@@ -370,6 +427,7 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
 // Matrix product of two given matrices
 int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
 {
+    printf("MatMul called! \n");
     if ((matResult->sMatrix) != NULL && (matNext->sMatrix) != NULL)
     {
         
@@ -413,50 +471,68 @@ int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
 // Transpose given matrix
 int MatTranspose(SquareMatrix* mat)
 {
-    // Set buffers for function operation
-    int nBuf, idx;
-    int nDim = mat->size;   
-    SparseMatElem* pMatrix = mat->sMatrix;
+    // printf("MatTranspose called! \n");
+    if ((mat->sMatrix) == NULL)
+    {
+        int row, col, buf;
+        int nDim = (mat->size);
+        for (row = 0; row < nDim - 1; row++)
+        {
+            for (col = row + 1; col < nDim; col++)
+            {
+                buf = (mat->dMatrix)[row * nDim + col];
+                (mat->dMatrix)[row * nDim + col] = (mat->dMatrix)[col * nDim + row];
+                (mat->dMatrix)[col * nDim + row] = buf;
+            }
+        }
+    }
+    else
+    {
+        // Set buffers for function operation
+        int nBuf, idx;
+        int nDim = mat->size;   
+        SparseMatElem* pMatrix = mat->sMatrix;
 
-    // Allocate two 1D arrays for counting the numbers and offsets
-    int* npCntByCol = (int*)malloc(sizeof(int) * nDim);
-    int* npOffsets = (int*)malloc(sizeof(int) * nDim);
+        // Allocate two 1D arrays for counting the numbers and offsets
+        int* npCntByCol = (int*)malloc(sizeof(int) * nDim);
+        int* npOffsets = (int*)malloc(sizeof(int) * nDim);
 
-    // Initialize two arrays to all 0.
-    for (idx = 0; idx < nDim * nDim; idx++)
-        npCntByCol[idx] = 0;
-    for (idx = 0; idx < nDim * nDim; idx++)
-        npOffsets[idx] = 0;
+        // Initialize two arrays to all 0.
+        for (idx = 0; idx < nDim * nDim; idx++)
+            npCntByCol[idx] = 0;
+        for (idx = 0; idx < nDim * nDim; idx++)
+            npOffsets[idx] = 0;
 
-    // Sweep the matrix and count
-    for (idx = 0; idx < (mat->nonzero_cnt); idx++)
-        npCntByCol[pMatrix[idx].col]++;
-    
-    // Calculate offsets
-    npOffsets[0] = 0;
-    for (idx = 0; idx < nDim - 1; idx++)
-        npOffsets[idx + 1] = npOffsets[idx] + npCntByCol[idx];
+        // Sweep the matrix and count
+        for (idx = 0; idx < (mat->nonzero_cnt); idx++)
+            npCntByCol[pMatrix[idx].col]++;
+        
+        // Calculate offsets
+        npOffsets[0] = 0;
+        for (idx = 0; idx < nDim - 1; idx++)
+            npOffsets[idx + 1] = npOffsets[idx] + npCntByCol[idx];
 
-    // Allocate array with same dimension with pMatrix
-    // pMatrix_T will store the transpose of pMatrix
-    SparseMatElem* pMatrix_T = (SparseMatElem*)malloc(sizeof(SparseMatElem)*(mat->nonzero_cnt));
+        // Allocate array with same dimension with pMatrix
+        // pMatrix_T will store the transpose of pMatrix
+        SparseMatElem* pMatrix_T = (SparseMatElem*)malloc(sizeof(SparseMatElem)*(mat->nonzero_cnt));
 
-    // Sweep pMatrix and parse values to pMatrix_T
-    for (idx = 0; idx < (mat->nonzero_cnt); idx++)
-        pMatrix_T[npOffsets[pMatrix[idx].col]++] = (SparseMatElem){ .row = pMatrix[idx].row,
-                                                                    .col = pMatrix[idx].col,
-                                                                    .val = pMatrix[idx].val };
-    
-    // Free the counter arrays
-    free(pMatrix);
-    pMatrix = NULL;
-    free(npCntByCol);
-    npCntByCol = NULL;
-    free(npOffsets);
-    npOffsets = NULL;
+        // Sweep pMatrix and parse values to pMatrix_T
+        for (idx = 0; idx < (mat->nonzero_cnt); idx++)
+            pMatrix_T[npOffsets[pMatrix[idx].col]++] = (SparseMatElem){ .row = pMatrix[idx].row,
+                                                                        .col = pMatrix[idx].col,
+                                                                        .val = pMatrix[idx].val };
+        
+        // Free the counter arrays
+        free(pMatrix);
+        pMatrix = NULL;
+        free(npCntByCol);
+        npCntByCol = NULL;
+        free(npOffsets);
+        npOffsets = NULL;
 
-    // Parse the pointer to tansposed matrix
-    mat->sMatrix = pMatrix_T;
+        // Parse the pointer to tansposed matrix
+        mat->sMatrix = pMatrix_T;
+    }
     return 0;
 }
 
@@ -464,6 +540,7 @@ int MatTranspose(SquareMatrix* mat)
 // Compare indices of two elements lexiographically
 int IdxCmp(SparseMatElem* elem1, SparseMatElem* elem2)
 {
+    // printf("IdxCmp called! \n");
     // Return 1 if index of elem 1 precedes,0 if identical,
     // -1 if index of elem 2 precedes
 
