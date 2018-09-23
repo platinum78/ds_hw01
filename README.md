@@ -83,4 +83,4 @@ Transposition was realized exactly the same way discussed in class.
 ## IV. How to Use
 
 Usage of this program is exactly same with the requirements in the PDF file, which was preliminarily provided. <br>
-**ONE THING TO BE CAUTIOUS: USE \` FOR TRANSPOSITION SYMBOL. OTHERWISE THE PROGRAM WON'T ** 
+**ONE THING TO BE CAUTIOUS: USE \` FOR TRANSPOSITION SYMBOL. OTHERWISE THE PROGRAM WON'T RECOGNIZE**
