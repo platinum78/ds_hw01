@@ -43,10 +43,12 @@ int ReadMatrix(FILE* input, int dim);
 int CreateDenseMatix(FILE* input, SquareMatrix* mat);
 int CreateSparseMatrix(FILE* input, SquareMatrix* mat);
 void Sparse2Dense(SquareMatrix* mat);
+void Dense2Sparse(SquareMatrix* mat);
 int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext);
 int MatMul(SquareMatrix* mat1, SquareMatrix* mat2);
 int MatTranspose(SquareMatrix* mat);
 int IdxCmp(SparseMatElem* elem1, SparseMatElem* elem2);
+int CheckSpaceEfficiency(SquareMatrix* mat);
 
 
 // Initializes SquareMatrix instance.
@@ -204,7 +206,7 @@ int CreateSparseMatrix(FILE* input, SquareMatrix* mat)
 void Sparse2Dense(SquareMatrix* mat)
 {
     // Verify if square matrix is sparse
-    if (mat->sMatrix == NULL)
+    if (mat->sMatrix != NULL)
         return;
 
     // Set buffers for function operation
@@ -233,6 +235,40 @@ void Sparse2Dense(SquareMatrix* mat)
     // Change the SquareMatrix into dense one
     (mat->dMatrix) = pMatrix_D;
     pMatrix_D = NULL;
+}
+
+
+void Dense2Sparse(SquareMatrix* mat)
+{
+    // Verify if square matrix is actually dense
+    if (mat->dMatrix != NULL)
+        return;
+    
+    // Set buffers for function operation
+    int nDim, idx, row, col;
+    int nNonZeroCnt = 0;
+
+    // Count number of nonzero elements in the dense matrix
+    for (idx = 0; idx < nDim * nDim; idx++)
+        if ((mat->dMatrix)[idx] == 0)
+            nNonZeroCnt++;
+    
+    // Allocate memory for sparse matrix
+    SparseMatElem* pMatrix = (SparseMatElem*)malloc(sizeof(SparseMatElem) * nNonZeroCnt);
+
+    // Read the matrix in column-major order and copy values to sparse matrix
+    idx = 0;
+    for (col = 0; col < nDim; col++)
+        for (row = 0; row < nDim; row++)
+            pMatrix[idx++] = (SparseMatElem){ .col = col, .row = row,
+                                              .val = (mat->dMatrix)[row*nDim + col]};
+    
+    //  Now dense matrix is obsolete. Free the array.
+    free(mat->dMatrix);
+    mat->dMatrix = NULL;
+    
+    // Connect dense matrix to the SquareMatrix instance
+    mat->sMatrix = pMatrix;
 }
 
 
@@ -427,14 +463,50 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
 // Matrix product of two given matrices
 int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
 {
+    // Buffers for function operation
+    int idx, idx1, idx2, row, col;
+    int nNonZeroCnt = 0;
+    int nDim = (matResult->size);
+
+    // Create and calibrate a dense matrix first. 
+    // This might be less space-efficient, but enhance mental health LMAO :)
+    int nDim = (matResult->size);
+    int* pMatrix = (int*)malloc(sizeof(int) * nDim * nDim);
+    for (idx = 0; idx < nDim * nDim; idx++)
+        pMatrix[idx1] = 0;
+    
     printf("MatMul called! \n");
     if ((matResult->sMatrix) != NULL && (matNext->sMatrix) != NULL)
     {
-        
+        for (idx1 = 0; idx1 < (matResult->nonzero_cnt); idx1++)
+        {
+            for (idx2 = 0; idx2 < (matNext->nonzero_cnt); idx2++)
+            {
+                if ((matResult->sMatrix)[idx1].col == (matNext->sMatrix)[idx2].row)
+                {
+                    // In matrix multiplication A * B,
+                    // Elements from A and B should have the same index for column and row each.
+                    idx = (matResult->sMatrix)[idx1].row * nDim + (matNext->sMatrix)[idx2].col; 
+                    pMatrix[idx] += (matResult->sMatrix)[idx1].val * (matNext->sMatrix)[idx2].val;
+                }
+            }
+        }
+        CheckSpaceEfficiency(matResult);
     }
     else if ((matResult->sMatrix) != NULL && (matNext->sMatrix) == NULL)
     {
-
+        // matResult is sparese and matNext is dense
+        // Set buffers for function operation
+        int idx, row, col;
+        int nDim = matResult->size;
+        
+        for (idx = 0; idx < (matResult->nonzero_cnt); idx++)
+        {
+            for (col = 0; col < nDim; col++)
+            {
+                (matResult->sMatrix)[idx].
+            }
+        }
     }
     else if ((matResult->sMatrix) == NULL && (matNext->sMatrix) != NULL)
     {
@@ -444,13 +516,7 @@ int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
     {
         // Dense * Dense Case
 
-        int row, col, idx;
-        int nDim = (matResult->size);
-
-        // Allocate new matrix and initialize to zero
-        int* pMatrix = (int*)malloc(sizeof(int) * nDim * nDim);
-        for (idx = 0; idx < nDim * nDim; idx++)
-            pMatrix[idx] = 0;
+        
 
         // Do matrix multiplication
         for (row = 0; row < nDim; row++)
@@ -555,6 +621,20 @@ int IdxCmp(SparseMatElem* elem1, SparseMatElem* elem2)
             return -1;
     else
         return -1;
+}
+
+
+int CheckSpaceEfficiency(SquareMatrix* mat)
+{
+    // Get information of the matrix
+    int nDim = (mat->size);
+    int nNonZeroCnt = (mat->nonzero_cnt);
+
+    // Judge the proper form of the matrix
+    if (nNonZeroCnt <= nDim * nDim / 3)
+        Dense2Sparse(mat);
+    else
+        Sparse2Dense(mat);
 }
 
 
