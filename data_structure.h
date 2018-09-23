@@ -498,9 +498,9 @@ int MatTranspose(SquareMatrix* mat)
         int* npOffsets = (int*)malloc(sizeof(int) * nDim);
 
         // Initialize two arrays to all 0.
-        for (idx = 0; idx < nDim * nDim; idx++)
+        for (idx = 0; idx < nDim; idx++)
             npCntByCol[idx] = 0;
-        for (idx = 0; idx < nDim * nDim; idx++)
+        for (idx = 0; idx < nDim; idx++)
             npOffsets[idx] = 0;
 
         // Sweep the matrix and count
