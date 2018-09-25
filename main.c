@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "./data_structure.h"
 #include "./utils.h"
 
@@ -9,6 +10,7 @@
 
 int main(void)
 {
+    clock_t tic = clock();
     char cStrBuf[10];                   // Character buffer, which is to store each number string
     unsigned char nBufCursor = 0;       // Cursor in buffer, which is to operate the buffer string
     char cCharBuf = '\0';               // Character buffer
@@ -20,6 +22,8 @@ int main(void)
     // Open file and initiate FILE struct
     FILE* input;
     input = fopen("./hw1_input.txt", "r");
+    FILE* output;
+    output = fopen("./hw1_output.txt", "w");
     FILE_INFO FileInfo;
 
     // Preprocess the file
@@ -39,7 +43,11 @@ int main(void)
     ParseFormula(input, &FileInfo, matA, matB, matResult);
 
     // Print the matrix
-    printf("matResult: "); PrintMatrix(matResult);
+    WriteMatrix(output, matA);
+    WriteMatrix(output, matB);
+    WriteMatrix(output, matResult);
     fclose(input);
+    clock_t toc = clock();
+    printf("%lf miliseconds elapsed. \n", (double)(toc-tic)/CLOCKS_PER_SEC*1000);
     return 0;
 }

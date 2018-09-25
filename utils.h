@@ -46,7 +46,6 @@ int PreProcess(FILE* input, FILE_INFO* FileInfo)
     fseek(input, 0, SEEK_SET);
     fscanf(input, "%s", cStrBuf);
     (FileInfo->dimension) = (int)atoi(cStrBuf);
-    printf("Dimension: %d \n", (FileInfo->dimension));
     // Find the first dollar mark
     (FileInfo->dollar_pos)[0] = FindDollar(input);
     // Analyze the first matrix
@@ -79,7 +78,6 @@ int ParseInput(FILE* input, FILE_INFO* FileInfo, SquareMatrix* matA, SquareMatri
 
     // Create first matrix
     fseek(input, (FileInfo->dollar_pos)[0] + 1, SEEK_SET);  // Go to where first matrix starts
-    printf("Nonzero_A: %d \n", (matA->nonzero_cnt));
     if ((matA->nonzero_cnt) <= nDim * nDim / 3)
         CreateSparseMatrix(input, matA);
     else
@@ -198,6 +196,45 @@ void PrintMatrix(SquareMatrix* mat)
             printf("\n");
         }
         printf("\n");
+    }
+        
+}
+
+
+void WriteMatrix(FILE* output, SquareMatrix* mat)
+{
+    int idx = 0;
+    if ((mat->sMatrix) != NULL)
+    {
+        fprintf(output, "S \n");
+
+        // Print columns
+        for (idx = 0; idx < (mat->nonzero_cnt); idx++)       
+            fprintf(output, "%d ", (mat->sMatrix)[idx].col);
+        fprintf(output, "\n");
+
+        // Print rows
+        for (idx = 0; idx < (mat->nonzero_cnt); idx++)       
+            fprintf(output, "%d ", (mat->sMatrix)[idx].row);
+        fprintf(output, "\n");
+
+        // Print values
+        for (idx = 0; idx < (mat->nonzero_cnt); idx++)       
+            fprintf(output, "%5d", (mat->sMatrix)[idx].val);
+        fprintf(output, "\n");
+        fprintf(output, "Total nonzero elements: %d \n", (mat->nonzero_cnt));
+    }
+    else
+    {
+        fprintf(output, "Dense Matrix \n\n");
+        int i, j;
+        for (i = 0; i < (mat->size); i++)
+        {
+            for (j = 0; j < (mat->size); j++)
+                fprintf(output, "%d ", (mat->dMatrix)[i * (mat->size) + j]);
+            fprintf(output, "\n");
+        }
+        fprintf(output, "\n");
     }
         
 }

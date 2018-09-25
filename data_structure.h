@@ -278,9 +278,11 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
     // printf("MatAdd called! \n");
     int idx = 0;
     int nBuf;  // Integer buffer for general purpose
+    int nDim = matResult->size;
+    
+    // Handle the case that matResult is an empty matrix (most likely in the initial state)
     if ((matResult->dMatrix) == NULL && (matResult->sMatrix) == NULL)
     {
-        printf("matResult is empty! \n");
         // Case when matResult is a zero matrix. Copy all values to matResult
         if ((matNext->sMatrix) != NULL)
         {
@@ -306,9 +308,12 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
         (matResult->nonzero_cnt) += (matNext->nonzero_cnt);
         return 0;
     }
-    printf("matResult not empty! \n");
+
+    // Iterate both sparse matrices and merge them into one.
     if ((matResult->sMatrix) != NULL && (matNext->sMatrix) != NULL)
     {
+        // Sparse + Sparse Case
+
         int nIdxCmp = 0, idxResult = 0, idxNext = 0;  // *CR: column+row / idx*: index buffer
         int nTotalElemCnt = (matResult->nonzero_cnt) + (matNext->nonzero_cnt);
         
@@ -423,12 +428,13 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
         free((matResult->sMatrix));
         (matResult->sMatrix) = pMatrix;
     }
-    else if ((matResult->sMatrix) != NULL && (matNext->sMatrix) == NULL)
+    else if ((matResult->sMatrix) != NULL && (matNext->dMatrix) != NULL)
     {
-        // matResult is sparse and matNext is dense
+        // Sparse + Dense Case
         // Convert matResult from sparse to dense matrix
         Sparse2Dense(matResult);
         nBuf = (matResult->size); // nBuf is used to store matrix size
+
         // Add all elements 
         for (idx = 0; idx < nBuf * nBuf; idx++)
             (matResult->dMatrix)[idx] += (matNext->dMatrix)[idx];
@@ -436,7 +442,6 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
     else if ((matResult->sMatrix) == NULL && (matNext->sMatrix) != NULL)
     {
         // Dense + Sparse Case
-
         SparseMatElem* pMatElem;
         for (idx = 0; idx < (matNext->size); idx++)
         {
@@ -466,7 +471,6 @@ int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
     // Buffers for function operation
     int idx, idx1, idx2, row, col;
     int nNonZeroCnt = 0;
-    int nDim = (matResult->size);
 
     // Create and calibrate a dense matrix first. 
     // This might be less space-efficient, but enhance mental health LMAO :)
@@ -497,34 +501,60 @@ int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
     {
         // matResult is sparese and matNext is dense
         // Set buffers for function operation
-        int idx, row, col;
+        int idx, row, col, colIdx;
         int nDim = matResult->size;
         
         for (idx = 0; idx < (matResult->nonzero_cnt); idx++)
         {
-            for (col = 0; col < nDim; col++)
+            for (colIdx = 0; colIdx < nDim; colIdx++)
             {
-                (matResult->sMatrix)[idx].
+                row = (matResult->sMatrix)[idx].row;
+                col = (matResult->sMatrix)[idx].col;
+                pMatrix[row * nDim + colIdx] += (matResult->sMatrix)[idx].val
+                                                * (matNext->dMatrix)[col * nDim + colIdx];
             }
         }
+        
+        // Now the previous sparse matrix is obsolete. Free it.
+        free(matResult->sMatrix);
+        matResult->sMatrix = NULL;
+        matResult->dMatrix = pMatrix;
     }
     else if ((matResult->sMatrix) == NULL && (matNext->sMatrix) != NULL)
     {
+        // Dense * Sparse Case
+        int idx, row, col, rowIdx;
+        int nDim = matResult->size;
 
+        for (idx = 0; idx < nDim; idx++)
+        {
+            for (rowIdx = 0; rowIdx < nDim; rowIdx++)
+            {
+                row = (matNext->sMatrix)[idx].row;
+                col = (matNext->sMatrix)[idx].col;
+                pMatrix[row * nDim + rowIdx] += (matResult->sMatrix)[idx].val
+                                                * (matNext->dMatrix)[col * nDim + rowIdx];
+            }
+        }
+
+        // Now matResult->dMatrix is obsolete. Free it.
+        free(matResult->dMatrix);
+        matResult->dMatrix = NULL;
+        matResult->dMatrix = pMatrix;
     }
     else if ((matResult->sMatrix) == NULL && (matNext->sMatrix) == NULL)
     {
         // Dense * Dense Case
-
-        
-
+        printf("Dense * Dense \n");
+        int* pMatResult = matResult->dMatrix;
+        int* pMatNext = matNext->dMatrix;
         // Do matrix multiplication
         for (row = 0; row < nDim; row++)
             for (col = 0; col < nDim; col++)
                 for (idx = 0; idx < nDim; idx++)
-                    pMatrix[row*nDim + col] += (matResult->dMatrix)[row*nDim + idx]
-                                                * (matNext->dMatrix)[idx*nDim + col];
-        
+                    pMatrix[row*nDim + col] += pMatResult[row*nDim + idx]
+                                                * pMatNext[idx*nDim + col];
+        printf("Dense * Dense finished \n");
         // Now matResult->dMatrix is obsolete. Free it.
         free(matResult->dMatrix);
         matResult->dMatrix = pMatrix;
@@ -540,6 +570,7 @@ int MatTranspose(SquareMatrix* mat)
     // printf("MatTranspose called! \n");
     if ((mat->sMatrix) == NULL)
     {
+        printf("Dense matrix \n");
         int row, col, buf;
         int nDim = (mat->size);
         for (row = 0; row < nDim - 1; row++)
@@ -558,6 +589,12 @@ int MatTranspose(SquareMatrix* mat)
         int nBuf, idx;
         int nDim = mat->size;   
         SparseMatElem* pMatrix = mat->sMatrix;
+        for (idx = 0; idx < nDim; idx++)
+        {
+            nBuf = pMatrix[idx].row;
+            pMatrix[idx].row = pMatrix[idx].col;
+            pMatrix[idx].col = nBuf;
+        }
 
         // Allocate two 1D arrays for counting the numbers and offsets
         int* npCntByCol = (int*)malloc(sizeof(int) * nDim);
