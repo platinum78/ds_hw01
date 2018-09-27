@@ -1,7 +1,7 @@
 import numpy as np
 import random
 
-file_io = open("./hw1_input.txt", "w")
+file_io = open("./io/hw1_input.txt", "w")
 dimension = int(input("Type dimension of matrix: "))
 nonzero_ratio_A = float(input("Ratio of nonzeros of A: "))
 nonzero_ratio_B = float(input("Ratio of nonzeros of B: "))

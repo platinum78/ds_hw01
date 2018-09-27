@@ -36,18 +36,23 @@ int main(void)
     ParseInput(input, matA, matB, matResult);
 
     // Parse the formula
-    printf("Checkpoint before ParseFormula() passed! \n");
+    // printf("Checkpoint before ParseFormula() passed! \n");
     ParseFormula(input, matA, matB, matResult);
 
-    // Print the matrix
-
+    // Print the matrices
     WriteMatrix(output, matA);
     fprintf(output, "$ \n");
     WriteMatrix(output, matB);
     fprintf(output, "$ \n");
+    // Sparse2Dense(matResult);
     WriteMatrix(output, matResult);
+
+    // Close file handler
     fclose(input);
+
+    // Finish measuring time and print the result
     clock_t toc = clock();
     printf("%lf miliseconds elapsed. \n", (double)(toc-tic)/CLOCKS_PER_SEC*1000);
+
     return 0;
 }

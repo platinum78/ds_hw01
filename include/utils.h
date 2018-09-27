@@ -58,21 +58,23 @@ int ParseInput(FILE* input, SquareMatrix* matA, SquareMatrix* matB, SquareMatrix
     fseek(input, 0, SEEK_SET);
     fscanf(input, "%s", cStrBuf);
     (matA->size) = (matB->size) = (matResult->size) = (int)atoi(cStrBuf);
+
     // Find the first dollar mark
     FindDollar(input);
     fseek(input, ftell(input)+1, SEEK_SET);
+
     // Create first matrix
     CreateDenseMatrix(input, matA);
-    AnalyzeMatrix(matA);
     CheckSpaceEfficiency(matA);
+
     // Find the second dollar mark
     FindDollar(input);
     fseek(input, ftell(input)+1, SEEK_SET);
+
     // Create second matrix
     CreateDenseMatrix(input, matB);
-    printf("Checkpoint passed! \n");
-    AnalyzeMatrix(matB);
     CheckSpaceEfficiency(matB);
+
     // Find the third dollar mark
     FindDollar(input);
     fseek(input, ftell(input)+1, SEEK_SET);
@@ -119,7 +121,7 @@ int ParseFormula(FILE* input, SquareMatrix* matA, SquareMatrix* matB, SquareMatr
             default:
                 continue;
         }
-        printf("Read %c, current trigger %d \n", cCharBuf, nOpTrigger);
+        // printf("Read %c, current trigger %d \n", cCharBuf, nOpTrigger);
 
         // Execute the corresponding operation when triggered.
         if (nOpTrigger == 2)
