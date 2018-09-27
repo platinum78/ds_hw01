@@ -1,16 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "./data_structure.h"
+#include "./utils.h"
+
+
+void FreeIt(SquareMatrix* mat)
+{
+    free(mat->sMatrix);
+    free(mat->dMatrix);
+}
 
 
 int main(void)
 {
-    FILE* input;
-    input = fopen("./test.txt", "r");
-    char cCharBuf;
-    int buf = 0;
-    printf("Before read: %d \n", ftell(input));
-    fread(&cCharBuf, 1, 1, input);
-    printf("Read value: %c \n", cCharBuf);
-    printf("After read: %d \n\n", ftell(input));
+    SquareMatrix* mat = SquareMatrixInit();
+    int* pMatrix = (int*)malloc(sizeof(int) * 100);
+    mat->size = 10;
+    mat->dMatrix = pMatrix;
+    Dense2Sparse(mat);
+    FreeIt(mat);
+    printf("Freed! \n");
     return 0;
 }
