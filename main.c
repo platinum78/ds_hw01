@@ -8,9 +8,8 @@
 #define FALSE 0
 
 
-int main(void)
-{
-    
+int main(int argc, char** argv)
+{   
     clock_t tic = clock();
     char cStrBuf[10];                   // Character buffer, which is to store each number string
     unsigned char nBufCursor = 0;       // Cursor in buffer, which is to operate the buffer string
@@ -23,8 +22,25 @@ int main(void)
     // Open file and initiate FILE struct
     tic = clock();
     FILE* input;
-    input = fopen("./io/hw1_input.txt", "r");
     FILE* output;
+    if (argc == 1)
+    {
+        input = fopen("./io/hw1_input.txt", "r");
+    }
+    else if (argc == 2)
+    {
+        input = fopen(argv[1], "r");
+        if (input == NULL)
+        {
+            printf("No such file exists. Try with no path option. \n");
+            return -1;
+        }
+    }
+    else
+    {
+        printf("Invalid arguments! \n");
+        return -1;
+    }
     output = fopen("./io/hw1_output.txt", "w");
 
     // Create three instances of struct SquareMatrix

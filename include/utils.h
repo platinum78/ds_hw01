@@ -229,5 +229,4 @@ void WriteMatrix(FILE* output, SquareMatrix* mat)
         
 }
 
-
 #endif

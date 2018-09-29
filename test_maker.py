@@ -1,12 +1,18 @@
 import numpy as np
 import random
 
-file_io = open("./io/hw1_input.txt", "w")
+file_name = str(input("Type any name for your input (path and .txt will automatically added): "))
 dimension = int(input("Type dimension of matrix: "))
 nonzero_ratio_A = float(input("Ratio of nonzeros of A: "))
 nonzero_ratio_B = float(input("Ratio of nonzeros of B: "))
 formula = input("Type formula: ")
 print(dimension)
+
+# Open file
+if file_name.strip() == "":
+    file_io = open("./io/hw1_input.txt", "w")
+else:
+    file_io = open("./io/" + file_name + ".txt", "w")
 
 # Print dimension to file
 file_io.writelines(str(dimension))

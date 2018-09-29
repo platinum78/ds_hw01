@@ -4,7 +4,25 @@ Data Structure SWE2015-41, School of Software, SKKU <br>
 Susung Park (2014311254), School of Mechanical Engineering, SKKU
 
 
-## I. Objectives and Considerations
+## I. I'm busy. Just tell me how to use this.
+
+OK, let's start from the conclusion.
+
+Just put your input file in `./io` folder, and execute the program `./main`.
+You'll get your output
+
+**This code is verified in Linux OS (Ubuntu 18.04 & GCC 7.3.0). Please use a Linux machine to evaluate this test.**
+
+All includings are header-only. Use the following simple command to compile the program. <br>
+`gcc main.c -o main` <br>
+Optimization options might help improve execution speed, but it is not tested.
+
+
+
+**ONE THING TO BE CAUTIOUS: USE \` FOR TRANSPOSITION SYMBOL. OTHERWISE THE PROGRAM WON'T RECOGNIZE**
+
+
+## II. Objectives and Considerations
 
 In this assignment, basic arithmetic and transposition operations of matrices are evaluated.
 While writing the codes, the followings are considered, with the priority follwing the numbers.
@@ -21,7 +39,7 @@ so we will have four separate functions with same function and different paramet
 It would be much better to unify the data type of function parameters.
 
 To resolve this problem, two unique `struct`s are defined; `SparseMatElem` and `SquareMatrix`. <br>
-`SquareMatrix` is a C struct that contains **dimension**, **# of nonzeros**, and **pointer to matrix**,
+`SquareMatrix` is a C struct that contains **dimension**, **number of nonzeros**, and **pointer to matrix**,
 and `SparseMatElem` is a C struct that contains **row and column indices**, and the **value** for there.
 
 One thing to point out is that `SquareMatrix` instance includes pointers for both sparse matrix and dense matrix.
@@ -34,7 +52,7 @@ Now, we consider about the operations between matrices.
 
 <br>
 
-## II. Operations
+## III. Operations
 
 Operations are given in a string form. Therefore, this formula should be parsed into set of operations.
 Fortunately, there is no condition to follow the priority rules, so serial reading is enough.
@@ -74,7 +92,7 @@ When we try to merge two dictionaries into one in lexiographical order (which ac
 
 ### 2. Multiplication
 
-Multiplication was either a hard job to create. (TBD)
+For multiplication, a zero dense matrix was allocated, and then 
 
 
 ### 3. Transposition
@@ -83,7 +101,7 @@ Transposition was realized exactly the same way discussed in class.
 
 <br>
 
-## III. Time & Space Compexity
+## IV. Time & Space Compexity
 
 Number of inputs can be considered in two ways, depending on the perspective.
 When the input is processed from the text file to matrix data, we will consider the 'input' as `n`, while actual number of inputs is `n^2`.
@@ -147,11 +165,6 @@ These benchmarks are executed on a machine with following hardware configuration
 * CPU: AMD Ryzen 7 2700X @3.25GHz
 * RAM: 32G, 2400MHz
 * Motherboard: ASUS X470 Prime
+* Software: Ubuntu 18.04.1, GCC 7.3.0
 
 <br>
-
-## IV. How to Use
-
-Simply follow the input rules given in the PDF file.
-
-**ONE THING TO BE CAUTIOUS: USE \` FOR TRANSPOSITION SYMBOL. OTHERWISE THE PROGRAM WON'T RECOGNIZE**
