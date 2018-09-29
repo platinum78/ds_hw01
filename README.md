@@ -8,18 +8,21 @@ Susung Park (2014311254), School of Mechanical Engineering, SKKU
 
 OK, let's start from the conclusion.
 
-Just put your input file in `./io` folder, and execute the program `./main`.
-You'll get your output
+    1. Unzip the package and move into `ds_hw01` directory.
+    2. Just put your input file in `./io` folder, and execute the program `./main`.
+    3. You'll get your output inside the same directory.
 
-**This code is verified in Linux OS (Ubuntu 18.04 & GCC 7.3.0). Please use a Linux machine to evaluate this test.**
+If you want to use a file other than `./io/hw1_input.txt`, give the name of file after the program name in the console.
+Even if custom file name is given, output will be created in the same directory.
+If input file does not exist, program raises error. Check the input file.
+
+**This code is written and verified on Linux OS (Ubuntu 18.04 & GCC 7.3.0). Please use a Linux machine to evaluate this program.**
 
 All includings are header-only. Use the following simple command to compile the program. <br>
 `gcc main.c -o main` <br>
 Optimization options might help improve execution speed, but it is not tested.
 
-
-
-**ONE THING TO BE CAUTIOUS: USE \` FOR TRANSPOSITION SYMBOL. OTHERWISE THE PROGRAM WON'T RECOGNIZE**
+**ONE THING TO BE CAUTIOUS: USE \` FOR TRANSPOSITION SYMBOL. OTHERWISE THE PROGRAM WON'T RECOGNIZE!**
 
 
 ## II. Objectives and Considerations
@@ -85,19 +88,24 @@ Else if `matResult` is sparse and `matNext` is dense, we can convert `matResult`
 
 Dealing with addition between two sparse matrices is a real problem. It is somewhat similar to a *union* in set theories.
 We should merge two matrices, while finding and adding elements that have identical indices.
-Fortunately, thanks to the nature of the process creating sparce matrices, ***both matrices are already sorted in column-major order***. We can simply consider this problem as merging two dictionaries.
+Fortunately, thanks to the nature of the process creating sparce matrices, **both matrices are already sorted in column-major order**.
+So, we can simply consider this problem as merging two dictionaries.
 
-When we try to merge two dictionaries into one in lexiographical order (which actually seems quite silly), we might open the first page of both dictionaries and start comparing which word will come prior. In the exactly same method, we can merge two sparse matrices.
+When we try to merge the words in two dictionaries into one in lexiographical order (which actually seems quite silly), we might open the first page of both dictionaries and start comparing which word will come prior.
+In the exactly same method, we can merge two sparse matrices.
 
 
 ### 2. Multiplication
 
-For multiplication, a zero dense matrix was allocated, and then 
+For multiplication, a zero dense matrix was allocated at all cases.
+Maybe, for sparse * sparse case, comparing the indices and allocating new sparse matrix could have reduced space complexity.
+However, since comparing the indices is a task that costs `O(mn)`, running this operation just once is enough. Therefore, I just unified to allocate a dense matrix for all four cases.
 
 
 ### 3. Transposition
 
 Transposition was realized exactly the same way discussed in class.
+Therefore, this has the time complexity of `O(n)` for sparse matrices, `O(n^2)` for dense matrices.
 
 <br>
 
@@ -134,37 +142,44 @@ Therefore, the time complexity is `O(mn)`.
 * For *Sparse * Sparse* case, we iterate every combination of elements from both matrices, compare indices, and multiply if the indices are proper.
 Therefore, the time complexity is `O(m^2)`.
 
+Here, one thing to consider is, time compexity does not follow space compexity.
+For a 1000 x 1000 matrix with 1E5 nonzeros, this is a sparse matrix but calculating as dense matrices is more efficient.
+The naive algotirhm has 1E9 computations, and the sparse matrix multiplication has time complexity of `O(t^2)`.
+Therefore, when nonzero elements exceed 31623 (theoretically), sparse calculation becomes more heavy.
+
 ### 4. Transposition
 
 * For sparse matrices, method discussed in class, which has time complexity of `O(n)`, is applied.
 * For dense matrices, swapping operation happens `n^2 - n` times, which corresponds to time complexity `O(n^2)`.
 
-### 5. Miscellaneous Operations
-
-* Space-efficiency verification: sweeps the dense matrix serially, which has time complexity of `O(n^2)`.
-* 
-
-### 6. Overall Performance
+### 5. Overall Performance
 
 For the worst case, which both matrices A and B are dense matrices and there is any multiplication operator, time complexity records `O(n^3)`.
 For the best case, which both matrices A and B are sparse and there are only addition or transposition, time complexity records `O(n)`.
 
-However, in fact, as `n` goes larger, time-portion of I/O task rapidly increases.
+In fact, as `n` goes larger, time-portion of I/O task rapidly increases.
 For a test case with 1000x1000 matrices, I/O operation took approximately 0.2 seconds, which is more than a half of total operation time.
-Nevertheless, since I/O operation is inevitable and there is no measure to improve it, no need to consider I/O task.
+However, since I/O operation is inevitable and there is no measure to improve it, no need to consider I/O task.
 
-The followings are some benchmarks from actual executions.
+Some benckmarks with 1000 x 1000 matrices are shown below.
 
-* I/O Operation:
-* Addition
-* Multiplication
-* Transposition
+* Sparse + Sparse:   136 ms
+* Sparse * Sparse:   331 ms
+* Sparse + Dense:    269 ms
+* Sparse * Dense:    320 ms
+* Dense + Sparse:    270 ms
+* Dense * Sparse:    278 ms
+* Dense + Dense:     337 ms
+* Dense * Dense:    3870 ms
 
-These benchmarks are executed on a machine with following hardware configuration.
+This benchmark is executed on my PC. The specifications are written below.
+System performance of the PC is relatively high, so more time might cost on computers with lower performance.
 
-* CPU: AMD Ryzen 7 2700X @3.25GHz
-* RAM: 32G, 2400MHz
-* Motherboard: ASUS X470 Prime
-* Software: Ubuntu 18.04.1, GCC 7.3.0
 
-<br>
+## V. System Information
+
+This code was written across two devices; laptop and PC.
+The hardware/software specs are shown below.
+
+* Laptop: Intel Core(R) i7-6700HQ, 16G RAM, Ubuntu 18.04, GCC 7.3.0
+* Desktop: AMD Ryzen 7 2700X, 32G RAM, Ubuntu 18.04, GCC 7.3.0

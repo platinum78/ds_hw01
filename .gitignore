@@ -1,4 +1,7 @@
+.vscode
 main
 testbox
 input.txt
 *.exe
+testbox.c
+
