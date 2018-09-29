@@ -87,8 +87,6 @@ int ParseFormula(FILE* input, SquareMatrix* matA, SquareMatrix* matB, SquareMatr
     SquareMatrix* pNextOperand = NULL;      // Next operand
     char cNextOperator = '+';              // Next operator
     int nOpTrigger = 1;  // nBuf will be used for operation triggering here.
-    
-    // fseek(input, 1, SEEK_CUR);
 
     while (1)
     {
@@ -121,7 +119,6 @@ int ParseFormula(FILE* input, SquareMatrix* matA, SquareMatrix* matB, SquareMatr
             default:
                 continue;
         }
-        // printf("Read %c, current trigger %d \n", cCharBuf, nOpTrigger);
 
         // Execute the corresponding operation when triggered.
         if (nOpTrigger == 2)
@@ -129,19 +126,15 @@ int ParseFormula(FILE* input, SquareMatrix* matA, SquareMatrix* matB, SquareMatr
             switch (cNextOperator)
             {
                 case '+':
-                    // printf("Addition \n");
                     MatAdd(matResult, pNextOperand);
                     break;
                 case '*':
-                    // printf("Multiplication \n");
                     MatMul(matResult, pNextOperand);
                     break;
                 case '`':
-                    // printf("Transpose \n");
                     MatTranspose(matResult);
                     break;
             }
-            // PrintMatrix(matResult);
             nOpTrigger = 0;
         }
     }
@@ -172,7 +165,6 @@ void PrintMatrix(SquareMatrix* mat)
         for (idx = 0; idx < (mat->nonzero_cnt); idx++)       
             printf("%5d", (mat->sMatrix)[idx].val);
         printf("\n\n");
-        // printf("Total nonzero elements: %d \n", (mat->nonzero_cnt));
     }
     else
     {
@@ -201,19 +193,18 @@ void WriteMatrix(FILE* output, SquareMatrix* mat)
 
         // Print columns
         for (idx = 0; idx < (mat->nonzero_cnt); idx++)       
-            fprintf(output, "%-5d", (mat->sMatrix)[idx].col);
+            fprintf(output, "%d ", (mat->sMatrix)[idx].col);
         fprintf(output, "\n");
 
         // Print rows
         for (idx = 0; idx < (mat->nonzero_cnt); idx++)       
-            fprintf(output, "%-5d", (mat->sMatrix)[idx].row);
+            fprintf(output, "%d ", (mat->sMatrix)[idx].row);
         fprintf(output, "\n");
 
         // Print values
         for (idx = 0; idx < (mat->nonzero_cnt); idx++)       
-            fprintf(output, "%-5d", (mat->sMatrix)[idx].val);
+            fprintf(output, "%d ", (mat->sMatrix)[idx].val);
         fprintf(output, "\n");
-        // printf("Total nonzero elements: %d \n", (mat->nonzero_cnt));
     }
     else
     {
@@ -222,7 +213,7 @@ void WriteMatrix(FILE* output, SquareMatrix* mat)
         for (i = 0; i < (mat->size); i++)
         {
             for (j = 0; j < (mat->size); j++)
-                fprintf(output, "%-5d", (mat->dMatrix)[i * (mat->size) + j]);
+                fprintf(output, "%d ", (mat->dMatrix)[i * (mat->size) + j]);
             fprintf(output, "\n");
         }
     }

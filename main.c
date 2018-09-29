@@ -11,13 +11,6 @@
 int main(int argc, char** argv)
 {   
     clock_t tic = clock();
-    char cStrBuf[10];                   // Character buffer, which is to store each number string
-    unsigned char nBufCursor = 0;       // Cursor in buffer, which is to operate the buffer string
-    char cCharBuf = '\0';               // Character buffer
-    int nDim;                           // Dimension of two matrices
-    int nBuf;                           // Integer buffer
-    int nDollarPos[3] = { 0, };         // Array to store location of each $'s
-    float fTotalTime = 0.0;
 
     // Open file and initiate FILE struct
     tic = clock();
@@ -60,7 +53,6 @@ int main(int argc, char** argv)
     fprintf(output, "$ \n");
     WriteMatrix(output, matB);
     fprintf(output, "$ \n");
-    // Sparse2Dense(matResult);
     WriteMatrix(output, matResult);
 
     // Close file handler

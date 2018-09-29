@@ -50,8 +50,6 @@ SquareMatrix* SquareMatrixInit(void)
     matrix->sMatrix = NULL;
     matrix->size = 0;
     matrix->nonzero_cnt = 0;
-
-    // printf("Initialized SquareMatrix object at 0x%p \n", (void*)matrix);
     return matrix;
 }
 
@@ -167,7 +165,6 @@ int CreateSparseMatrix(FILE* input, SquareMatrix* mat)
     // Parse the pointer to tansposed matrix
     mat->sMatrix = pMatrix_T;
 
-    // printf("Sparse matrix created at %p \n", (void*)mat);
     return 0;
 }
 
@@ -256,7 +253,6 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
     // MatAdd should be responsible for all four cases: S+S, S+D, D+S, D+D
     printf("MatAdd() Called! \n");
 
-    // printf("MatAdd called! \n");
     int idx = 0;
     int nBuf;  // Integer buffer for general purpose
     int nDim = matResult->size;
@@ -304,10 +300,8 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
         // Sparse + Sparse Case
         printf("Sparse + Sparse \n");
 
-        int nIdxCmp = 0, idxResult = 0, idxNext = 0;  // *CR: column+row / idx*: index buffer
+        int nIdxCmp = 0, idxResult = 0, idxNext = 0;
         int nTotalElemCnt = (matResult->nonzero_cnt) + (matNext->nonzero_cnt);
-        
-        // printf("Total elements before repetition elimination: %d \n", nTotalElemCnt);
         int nRepElemCnt = 0;  // Variable to count the number of repeated elements
 
         // First loop iteration: count the overall elements considering repetition
@@ -332,13 +326,11 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
                 if (nIdxCmp == 1)
                 {
                     // matResult precedes matNext
-                    // printf("matResult precedes \n");
                     idxResult++;
                 }
                 else if (nIdxCmp == -1)
                 {
                     // matNext precedes matResult
-                    // printf("matNext precedes \n");
                     idxNext++;
                 }
                 else if (nIdxCmp == 0)
@@ -361,7 +353,6 @@ int MatAdd(SquareMatrix* matResult, SquareMatrix* matNext)
         int idxNew = 0;
         while (idxResult + idxNext != nTotalElemCnt)
         {
-            // printf("nexIndex: %d \n", idxNew);
             if (idxResult == (matResult->nonzero_cnt) && idxNext != (matNext->nonzero_cnt))
             {
                 // Index of matResult reached the top
@@ -544,7 +535,7 @@ int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
     else if ((matResult->dMatrix) == NULL && (matNext->sMatrix) == NULL)
     {
         // Sparse * Dense
-        printf("Sparse * Dense");
+        printf("Sparse * Dense \n");
 
         // Set buffers for function operation
         int idx, row, col, colIdx;
@@ -578,7 +569,7 @@ int MatMul(SquareMatrix* matResult, SquareMatrix* matNext)
     }
     else if ((matResult->sMatrix) == NULL && (matResult->dMatrix) == NULL)
     {
-        printf("Dense * Sparse");
+        printf("Dense * Sparse \n");
         // Dense * Sparse Case
 
         int idx, row, col, rowIdx;
@@ -725,7 +716,6 @@ int MatTranspose(SquareMatrix* mat)
 // Compare indices of two elements lexiographically
 int IdxCmp(SparseMatElem* elem1, SparseMatElem* elem2)
 {
-    // printf("IdxCmp called! \n");
     // Return 1 if index of elem 1 precedes,0 if identical,
     // -1 if index of elem 2 precedes
 
